@@ -1,2 +1,2 @@
 # twitter-nodejs
-node.js express, pug, sequelize, passport
+node.js express, pug, sequelize, passport(kakao)
