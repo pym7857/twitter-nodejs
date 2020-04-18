@@ -14,7 +14,7 @@ const router = express.Router();
 router.post('/token', async (req, res) => {
     const { clientSecret } = req.body;
     try {
-        // 전달 받은 클라이언트 비밀키로, 도메인이 등록된 것인지를 먼저 확인 !
+        // 전달 받은 클라이언트 비밀키(client Secret)로, 도메인이 등록된 것인지를 먼저 확인 !
         const domain = await Domain.findOne({
             where: { clientSecret },
             include: {
@@ -29,7 +29,7 @@ router.post('/token', async (req, res) => {
             });
         }
         // 등록된 도메인 이라면, 토큰을 발급 
-        const token = jwt.sign({    // jwt.sign(토큰의 내용, 토큰의 비밀키, 토큰의 설정) : 토큰을 발급
+        const token = jwt.sign({    // 토큰 발급 : jwt.sign(토큰의 내용, 토큰의 비밀키, 토큰의 설정)
             id: domain.user.id,
             nick: domain.user.nick,
         }, process.env.JWT_SECRET, {
@@ -53,6 +53,49 @@ router.post('/token', async (req, res) => {
 /* 사용자가 발급받은 토큰을 테스트해볼 수 있는 라우터 [ GET /v1/test ] */
 router.get('/test', verifyToken, (req, res) => {    // 토큰을 검증하는 미들웨어(routes/middlewares.js - verifyToken)를 거친 후,
     res.json(req.decoded);  // 검증이 성공했다면 토큰의 내용물을 응답으로 보내줍니다.
+});
+
+/* 내가 올린 포스트(게시글)을 가져오는 라우터 [ GET /posts/my ] */
+router.get('/posts/my', verifyToken, (req, res) => {
+    Post.findAll({ where: {userId: req.decoded.id} })
+        .then((posts) => {
+            console.log(posts);
+            res.json({
+                code: 200,
+                payload: posts,
+            });
+        })
+        .catch((e) => {
+            console.error(e);
+            return res.status(500).json({
+                code: 500,
+                message: '서버 에러',
+            });
+        });
+});
+
+/* 해시태그 검색 결과를 가져오는 라우터 [ GET /posts/hashtag/:title ] */
+router.get('/posts/hashtag/:title', verifyToken, async (req, res) => {
+    try {
+        const hashtag = await Hashtag.find({ where: {title: req.params.title } });
+        if(!hashtag) {
+            return res.status(404).json({
+                code: 404,
+                message: '검색 결과가 없습니다.',
+            });
+        }
+        const posts = await hashtag.getPosts();
+        return res.json({
+            code: 200,
+            payload: posts,
+        });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({
+            code: 500,
+            message: '서버 에러',
+        });
+    }
 });
 
 module.exports = router;
