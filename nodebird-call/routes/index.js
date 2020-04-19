@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 
 const router = express.Router();
-const URL = 'http://localhost:8002/v1'; // nodebird-api 서버 
+const URL = 'http://localhost:8002/v2'; // nodebird-api 서버 (v2 라우터)
 axios.defaults.headers.origin = 'http://localhost:8003'; // origin 헤더 추가 
 
 /*  해당 주소(URL)에 헤더와 함께 요청을 보낸다. */
@@ -51,6 +51,10 @@ router.get('/search/:hashtag', async (req, res, next) => {
         }
     }
 });
+
+router.get('/', (req, res) => {
+    res.render('main', { key: process.env.CLIENT_SECRET });     // main.pug로 이동
+})
 
 module.exports = router;
 

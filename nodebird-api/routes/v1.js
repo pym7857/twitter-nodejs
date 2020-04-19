@@ -5,10 +5,12 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 
-const { verifyToken } = require('./middlewares');
+const { verifyToken, deprecated } = require('./middlewares');
 const { Domain, User, Post, Hashtag } = require('../models');
 
-const router = express.Router();
+const router = express.Router(); 
+
+router.use(deprecated);     // 이제 v1 라우터를 사용할 시에는 경고 메세지를 띄운다.
 
 /* 토큰을 발급하는 라우터 [ POST /v1/token ] */
 router.post('/token', async (req, res) => {
